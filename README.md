@@ -1,6 +1,6 @@
 # Final Project
 Using a version of VADER package specialized in financial lexicon and based on previous financial news, we assign sentiment scores to stock tickers on a daily, weekly and monhtly basis.
-This is followed by a visual presentation of the sentiment analysis.
+This is followed by some visual presentation of the results from the sentiment analysis.
 
 ## Software and Data Requirements 
 
