@@ -20,3 +20,10 @@ from transformers import pipeline
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 ```
+## How to use
+
+- In user input part enter the stock ticker for which you want to see a brief overview of sentiment analysis of related news. (e.g. BA *for Boeing*)  
+- The time range will be determined also based on user's input, whether it will fetch news data from the past day, week or month. *Due to the availability of data within the chosen approach, the current maximum of the time span is one month.*  
+- Running the rest of the code will trigger assigning sentiment scores to the chosen asset and a brief visual analysis with wordcloud and a plot to show sentiment score evolution over time.  
+- The code also offers a deeper dive into the negative scores by filtering for data with poor sentiment scores to get more context.
+
