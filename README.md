@@ -57,7 +57,10 @@ def sentiment_analysis(text):
 and get the following output:  
   
   **1. Assigned sentiment scores (floats from -1 to 1)**  
-```python news_df['combined_score'].describe()``` tells us the average sentiment score assigned to Boeing Co. is postive, but there is a wide range of values (from -0.807 to 0.929)
+```python news_df['combined_score'].describe()``` tells us the average sentiment score assigned to Boeing Co. is postive, but there is a wide range of values (from -0.807 to 0.929), particularily for daily and weekly sentiment scores.
+
+<img src="https://github.com/user-attachments/assets/767e7832-f581-4634-9337-47bdf491d416" width="400"/>
+
    
   **2. WordCloud: Cluster of words presented by their frequency in financial news for BA stock**
   
