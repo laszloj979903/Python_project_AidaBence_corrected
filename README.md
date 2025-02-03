@@ -76,5 +76,3 @@ and get the following output:
   ![image](https://github.com/user-attachments/assets/157e10b7-1b2e-49c6-8de7-bcc6f903ba4f)
 
 
-=======
->>>>>>> main
