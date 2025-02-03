@@ -79,9 +79,9 @@ def sentiment_analysis(text):
     try:
         score = finvader(
             text,
-            use_sentibignomics=True,
-            use_henry=True,
-            indicator="compound"
+            use_sentibignomics=True,  # Use SentiBignomics lexicon
+            use_henry=True,          # Use Henry's lexicon
+            indicator="compound"     # Compound sentiment score
         )
         return score
     except Exception as e:
