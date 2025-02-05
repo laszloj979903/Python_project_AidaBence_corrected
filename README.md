@@ -21,11 +21,12 @@ import datetime
 import time
 import random
 import nltk
-from tqdm import tqdm
-from finvader import finvader
-from transformers import pipeline
+import streamlit as st
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+from finvader import finvader
 import yfinance as yf
 ```
 FinVADER package requires Python 3.8 - 3.11, and NLTK 3.6.  
