@@ -8,18 +8,16 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import plotly.express as px
 from finvader import finvader
+import yfinance as yf
 
 #%%Creating streamlit title and short description
 st.title("Stock News Sentiment Analysis")
-st.write("Using a version of VADER package specialized in financial lexicon and based on previous financial news, sentiment scores are assigned to stock tickers on a daily, weekly and monthly basis. The available input data is presented in the table below, that is followed by visual presentations (WordCloud, historical chart) based on the results of the sentiment analysis. In the end, a WordCloud based only for Articles with Poor Sentiment Scores is presented (if there are negative sentiment scores in the analysed timeframe).")
+st.subheader("Final Project: Data Processing in Python  \n Aida Hodzic & Bence Laszlo" )
+st.write("Using a FinVADER package specialized in financial lexicon, sentiment scores are assigned to stock tickers on a daily, weekly and monthly basis. Scores are calculated using a combination of article titles and description.  \n Using financial news data from YahooFinance, we also provide plots of the adjusted close prices against the computed sentiment scores.  \n The assigned sentiment scores are presented using WordClouds, time-series plots and filtered tables that provide more context. \n For more information, a new WordCloud in the end is generated only for articles with negative sentiment scores, if there are any.")
 
 #%%Required inputs for sentiment analysis, API key is specific to the news site
 api_key = 'OTl2SM9_8xGEkqop_pj57cYyS4gjsurl'
 news_url = "https://api.polygon.io/v2/reference/news"
-
-#%%Creating the input bars for streamlit
-ticker = st.sidebar.text_input("Enter the stock ticker symbol (e.g., BA):", "AAPL").strip().upper()
-date_choice = st.sidebar.selectbox("Choose the date range:", ["Last day", "Last week", "Last month"])
 
 #%%Creating the sidebar for color maps that work for both wordcloud and the trend analysis chart
 color_map = {
@@ -35,6 +33,12 @@ color_map = {
 }
 color_scheme = st.sidebar.selectbox("Choose Color Scheme:", list(color_map.keys()))
 chart_color = color_map[color_scheme]
+st.sidebar.markdown("---") 
+
+ticker = st.sidebar.text_input("Enter the stock ticker symbol:", "AAPL").strip().upper()
+date_choice = st.sidebar.selectbox("Choose the date range:", ["previous day", "previous week", "previous month"], index=1)
+st.text("We recommend using weekly or monthly horizons for more insights.")
+st.sidebar.markdown("---")  # Adds a horizontal line for separation  
 
 #%%Determining the date range based on possible inputs 
 today = datetime.date.today()
@@ -100,19 +104,63 @@ sentiment_data = df.groupby(df['published_utc'].dt.date)['combined_score'].mean(
 st.subheader(f"News Articles for {ticker}")
 df_filtered = st.data_editor(df, num_rows="dynamic")
 
+#%%Table that can be filtered for postivie and negative scores
+st.subheader(f"News Articles for {ticker}")
+if not df.empty and 'combined_score' in df.columns:
+    filter_option = st.radio(
+        "Filter articles by their sentiment scores:",
+        ("All Articles", "Positive Scores", "Negative Scores")
+    )
+    if filter_option == "Positive Scores":
+        filtered_df = df[df['combined_score'] > 0][["title", "description", "combined_score", "published_utc"]]
+    elif filter_option == "Negative Scores":
+        filtered_df = df[df['combined_score'] < 0][["title", "description", "combined_score", "published_utc"]]
+    else:
+        filtered_df = df[["title", "description", "combined_score", "published_utc"]]
+    st.subheader(f"Articles for {ticker} from {date_choice}")
+    st.data_editor(filtered_df, num_rows="fixed")
+
+#%% stooock prices for comparison! 
+def fetch_and_plot_stock(ticker, date_choice):
+    period_mapping = {
+        "previous day": "1d",
+        "previous week": "5d",
+        "previous month": "1mo"
+    }
+    
+    stock = yf.Ticker(ticker)
+    data = stock.history(period=period_mapping[date_choice], interval="1h" if date_choice == "previous day" else "1d")
+   
+    fig, ax1 = plt.subplots(figsize=(12, 6), dpi=100)
+    plt.style.use('ggplot')
+    ax1.plot(data.index, data.get('Adj Close', data['Close']), label=f'{ticker} Adjusted Close Price', color='royalblue', linewidth=2, marker='o', markersize=4, alpha=0.8)
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Adjusted Close Price (USD)', color='blue')
+    ax1.set_title(f'{ticker} Stock Price and Sentiment Over Past {date_choice}')
+    
+    ax2 = ax1.twinx()
+    ax2.plot(sentiment_data['published_utc'], sentiment_data['combined_score'], label='Sentiment Score', color='crimson', linewidth=2, linestyle='dashed', marker='s', markersize=4, alpha=0.8)
+    ax2.set_ylabel("Sentiment Score", color='red')
+    ax2.legend(loc='upper right')
+    st.pyplot(fig)
+
+st.subheader("Stock Close Prices vs. Sentiment Score")
+fetch_and_plot_stock(ticker, date_choice)
+st.write("Please consider there might be a small mismatch due to calculating 1 week as 5 business days for stock price data and 7 days for financial news data.")
+
 #%%Including historical sentiment trend chart for tickewr
 if not df.empty and 'combined_score' in df.columns:
-    st.subheader(f"Historical Sentiment Trend for {ticker}")
+    st.subheader(f"Sentiment Score trend for {ticker}")
 
     df['published_utc'] = pd.to_datetime(df['published_utc'])
 
     daily_avg_sentiment = df.groupby(df['published_utc'].dt.date)['combined_score'].mean().reset_index()
 
-    fig = px.scatter(df, x='published_utc', y='combined_score', title='Historical Sentiment Scores',
+    fig = px.scatter(df, x='published_utc', y='combined_score', title=f"Sentiment Scores for {date_choice}",
                      labels={'combined_score': 'Sentiment Score', 'published_utc': 'Date'},
                      color_discrete_sequence=[chart_color])
 
-    best_articles = df.nlargest(5, 'combined_score')
+    best_articles = df.nlargest(5, 'combined_score') #we did 5 best and worst articles
     worst_articles = df.nsmallest(5, 'combined_score')
 
     fig.add_scatter(x=best_articles['published_utc'], y=best_articles['combined_score'], 
@@ -130,26 +178,16 @@ if not df.empty and 'combined_score' in df.columns:
     
 #%%Including descriptive statistics based on the dataframe table
 if not df.empty and 'combined_score' in df.columns:
-    st.subheader(f"Descriptive Statistics for {ticker}")
+    st.subheader(f"Descriptive Statistics for {ticker} score for {date_choice}")
+    st.write("Brief overview of for a better understanding of the assigned sentiment values.")
 
-    descriptive_stats = df['combined_score'].describe().to_frame()
+    descriptive_stats = df['combined_score'].describe().to_frame().T
     descriptive_stats.rename(columns={'combined_score': 'Sentiment Score Statistics'}, inplace=True)
 
     st.dataframe(descriptive_stats)
 else:
-    st.warning("No sentiment analysis data available for descriptive statistics.")
-    
-#%%Including the best and worst rated articles separately
-if not df.empty and 'combined_score' in df.columns:
-    best_articles = df.nlargest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
-    worst_articles = df.nsmallest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
+    st.warning("No data available to perform descriptive statistics.")
 
-    st.subheader(f"Top 5 Articles with the Best Sentiment Scores for {ticker}")
-    st.data_editor(best_articles, num_rows="dynamic")
-
-    st.subheader(f"Top 5 Articles with the Worst Sentiment Scores for {ticker}")
-    st.data_editor(worst_articles, num_rows="dynamic")
-    
 #%%Generating WordCloud based on ticker input
 text_data = " ".join(df["combined_text"].dropna())
 wordcloud = WordCloud(width=800, height=400, background_color='white', colormap=color_scheme).generate(text_data)
@@ -159,20 +197,27 @@ fig, ax = plt.subplots()
 ax.imshow(wordcloud, interpolation='bilinear')
 ax.axis("off")
 st.pyplot(fig)
+#%%Sliced
+if not df.empty and 'combined_score' in df.columns:
+    best_articles = df.nlargest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
+    worst_articles = df.nsmallest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
+
+    st.subheader(f"Articles with Best Sentiment Scores for {ticker}")
+    st.data_editor(best_articles, num_rows="dynamic")
+
+    st.subheader(f"Articles with Worst Sentiment Scores for {ticker}")
+    st.data_editor(worst_articles, num_rows="dynamic")
     
-#%%Generating waterfall chart based on sentiment trend analysis
-st.subheader(f"Sentiment Trend for {ticker}")
-fig = px.bar(sentiment_data, x='published_utc', y='combined_score', title='Sentiment Analysis Over Time', 
-                 text_auto=True, labels={'combined_score': 'Sentiment Score', 'published_utc': 'Date'},
-                 color_discrete_sequence=[chart_color])
-st.plotly_chart(fig)
+
     
 #%%Generating WordCloud based only on poor sentiment news articles (score below 0) based on ticker input
 poor_sentiment_data = df[df['combined_score'] < 0]
 if not poor_sentiment_data.empty:
-        st.subheader(f"Word Cloud for Articles with Poor Sentiment Scores for {ticker}")
+        st.subheader(f"Word Cloud for articles with negative sentiment score")
         wordcloud = WordCloud(width=800, height=400, background_color="white", colormap=color_scheme).generate(" ".join(poor_sentiment_data['combined_text'].dropna()))
         plt.figure(figsize=(10, 5))
         plt.imshow(wordcloud, interpolation='bilinear')
         plt.axis("off")
         st.pyplot(plt)
+
+st.write("If wordcloud brings up an interesting word, try using the search option and looking for it in the first table to dig deeper into the financial news and the context of it.")
