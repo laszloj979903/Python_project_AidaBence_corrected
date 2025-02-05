@@ -7,6 +7,7 @@ import random
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import plotly.express as px
+import plotly.graph_objects as go
 from finvader import finvader
 import yfinance as yf
 
@@ -121,7 +122,8 @@ if not df.empty and 'combined_score' in df.columns:
     st.data_editor(filtered_df, num_rows="fixed")
 
 #%% stooock prices for comparison! 
-def fetch_and_plot_stock(ticker, date_choice):
+
+def fetch_and_plot_stock(ticker, date_choice, sentiment_data):
     period_mapping = {
         "previous day": "1d",
         "previous week": "5d",
@@ -130,25 +132,43 @@ def fetch_and_plot_stock(ticker, date_choice):
     
     stock = yf.Ticker(ticker)
     data = stock.history(period=period_mapping[date_choice], interval="1h" if date_choice == "previous day" else "1d")
-   
-    fig, ax1 = plt.subplots(figsize=(12, 6), dpi=100)
-    plt.style.use('ggplot')
-    ax1.plot(data.index, data.get('Adj Close', data['Close']), label=f'{ticker} Adjusted Close Price', color='royalblue', linewidth=2, marker='o', markersize=4, alpha=0.8)
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('Adjusted Close Price (USD)', color='blue')
-    ax1.set_title(f'{ticker} Stock Price and Sentiment Over Past {date_choice}')
     
-    ax2 = ax1.twinx()
-    ax2.plot(sentiment_data['published_utc'], sentiment_data['combined_score'], label='Sentiment Score', color='crimson', linewidth=2, linestyle='dashed', marker='s', markersize=4, alpha=0.8)
-    ax2.set_ylabel("Sentiment Score", color='red')
-    ax2.legend(loc='upper right')
-    st.pyplot(fig)
+    if data.empty or sentiment_data.empty:
+        st.warning("No data available for the selected period.")
+        return
+    
+    data.reset_index(inplace=True)
+    sentiment_data['published_utc'] = pd.to_datetime(sentiment_data['published_utc'])
+    daily_avg_sentiment = sentiment_data.groupby(sentiment_data['published_utc'].dt.date)['combined_score'].mean().reset_index()
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=sentiment_data['published_utc'], y=sentiment_data['combined_score'],
+                             mode='markers', marker=dict(color='crimson', size=6),
+                             name='Sentiment Score'))
+    
+    fig.add_trace(go.Scatter(x=daily_avg_sentiment['published_utc'], y=daily_avg_sentiment['combined_score'],
+                             mode='lines', line=dict(color=chart_color, width=2),
+                             name='Daily Average Sentiment'))
+
+    fig.add_trace(go.Scatter(x=data['Date'], y=data.get('Adj Close', data['Close']),
+                             mode='lines', line=dict(color='royalblue', width=2),
+                             name='Stock Price', yaxis='y2'))
+    
+    fig.update_layout(
+        title=f"{ticker} Stock Price and Sentiment Score for {date_choice}",
+        xaxis_title='Date',
+        yaxis=dict(title='Sentiment Score', side='left', color='crimson'),
+        yaxis2=dict(title='Stock Price (USD)', side='right', overlaying='y', color='royalblue')
+    )
+    
+    st.plotly_chart(fig)
+    st.write("Please note that there might be minor discrepancies due to different timeframes: stock data considers business days, whereas sentiment data spans all days.")
 
 st.subheader("Stock Close Prices vs. Sentiment Score")
-fetch_and_plot_stock(ticker, date_choice)
+fetch_and_plot_stock(ticker, date_choice, sentiment_data)
+
 st.write("Please consider there might be a small mismatch due to calculating 1 week as 5 business days for stock price data and 7 days for financial news data.")
 
-#%%Including historical sentiment trend chart for tickewr
 #%%Including historical sentiment trend chart for tickewr
 if not df.empty and 'combined_score' in df.columns:
     st.subheader(f"Sentiment Score trend for {ticker}")
@@ -173,7 +193,7 @@ if not df.empty and 'combined_score' in df.columns:
                     name='Worst Articles')
 
     fig.add_scatter(x=daily_avg_sentiment['published_utc'], y=daily_avg_sentiment['combined_score'], 
-                    mode='lines', line=dict(color='blue', width=2), 
+                    mode='lines', line=dict(color=chart_color, width=2), 
                     name='Daily Average Sentiment')
     st.plotly_chart(fig)
     
@@ -215,7 +235,7 @@ if not df.empty and 'combined_score' in df.columns:
 #%%Generating WordCloud based only on poor sentiment news articles (score below 0) based on ticker input
 poor_sentiment_data = df[df['combined_score'] < 0]
 if not poor_sentiment_data.empty:
-        st.subheader(f"Word Cloud for articles with negative sentiment score")
+        st.subheader(f"Word Cloud for articles with negative sentiment score for {ticker}")
         wordcloud = WordCloud(width=800, height=400, background_color="white", colormap=color_scheme).generate(" ".join(poor_sentiment_data['combined_text'].dropna()))
         plt.figure(figsize=(10, 5))
         plt.imshow(wordcloud, interpolation='bilinear')
