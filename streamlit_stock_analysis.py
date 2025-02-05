@@ -10,6 +10,7 @@ import plotly.express as px
 from finvader import finvader
 import yfinance as yf
 
+
 #%%Creating streamlit title and short description
 st.title("Stock News Sentiment Analysis")
 st.subheader("Final Project: Data Processing in Python  \n Aida Hodzic & Bence Laszlo" )
@@ -33,20 +34,23 @@ color_map = {
 }
 color_scheme = st.sidebar.selectbox("Choose Color Scheme:", list(color_map.keys()))
 chart_color = color_map[color_scheme]
-st.sidebar.markdown("---") 
+
+st.sidebar.markdown("---")  # Adds a horizontal line for separation
+
+#%%Creating the user input bars for streamlit
 
 ticker = st.sidebar.text_input("Enter the stock ticker symbol:", "AAPL").strip().upper()
 date_choice = st.sidebar.selectbox("Choose the date range:", ["previous day", "previous week", "previous month"], index=1)
 st.text("We recommend using weekly or monthly horizons for more insights.")
-st.sidebar.markdown("---")  # Adds a horizontal line for separation  
+st.sidebar.markdown("---")  # Adds a horizontal line for separation
 
 #%%Determining the date range based on possible inputs 
 today = datetime.date.today()
-if date_choice == "Last day":
+if date_choice == "previous day":
     start_date = (today - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-elif date_choice == "Last week":
+elif date_choice == "previous week":
     start_date = (today - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
-elif date_choice == "Last month":
+elif date_choice == "previous month":
     start_date = (today - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 end_date = today.strftime("%Y-%m-%d")
 
@@ -100,10 +104,6 @@ df['combined_score'] = df['combined_text'].apply(sentiment_analysis)
 df['published_utc'] = pd.to_datetime(df['published_utc'])
 sentiment_data = df.groupby(df['published_utc'].dt.date)['combined_score'].mean().reset_index()
     
-#%%Including the dataframe table in streamlit with filters
-st.subheader(f"News Articles for {ticker}")
-df_filtered = st.data_editor(df, num_rows="dynamic")
-
 #%%Table that can be filtered for postivie and negative scores
 st.subheader(f"News Articles for {ticker}")
 if not df.empty and 'combined_score' in df.columns:
@@ -148,6 +148,7 @@ st.subheader("Stock Close Prices vs. Sentiment Score")
 fetch_and_plot_stock(ticker, date_choice)
 st.write("Please consider there might be a small mismatch due to calculating 1 week as 5 business days for stock price data and 7 days for financial news data.")
 
+#%%Including historical sentiment trend chart for tickewr
 #%%Including historical sentiment trend chart for tickewr
 if not df.empty and 'combined_score' in df.columns:
     st.subheader(f"Sentiment Score trend for {ticker}")
@@ -197,6 +198,7 @@ fig, ax = plt.subplots()
 ax.imshow(wordcloud, interpolation='bilinear')
 ax.axis("off")
 st.pyplot(fig)
+
 #%%Sliced
 if not df.empty and 'combined_score' in df.columns:
     best_articles = df.nlargest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
@@ -221,3 +223,4 @@ if not poor_sentiment_data.empty:
         st.pyplot(plt)
 
 st.write("If wordcloud brings up an interesting word, try using the search option and looking for it in the first table to dig deeper into the financial news and the context of it.")
+
