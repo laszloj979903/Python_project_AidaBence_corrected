@@ -167,8 +167,6 @@ def fetch_and_plot_stock(ticker, date_choice, sentiment_data):
 st.subheader("Stock Close Prices vs. Sentiment Score")
 fetch_and_plot_stock(ticker, date_choice, sentiment_data)
 
-st.write("Please consider there might be a small mismatch due to calculating 1 week as 5 business days for stock price data and 7 days for financial news data.")
-
 #%%Including historical sentiment trend chart for tickewr
 if not df.empty and 'combined_score' in df.columns:
     st.subheader(f"Sentiment Score trend for {ticker}")
@@ -200,7 +198,7 @@ if not df.empty and 'combined_score' in df.columns:
 #%%Including descriptive statistics based on the dataframe table
 if not df.empty and 'combined_score' in df.columns:
     st.subheader(f"Descriptive Statistics for {ticker} score for {date_choice}")
-    st.write("Brief overview of for a better understanding of the assigned sentiment values.")
+    st.write("Brief overview for a better understanding of the assigned sentiment values.")
 
     descriptive_stats = df['combined_score'].describe().to_frame().T
     descriptive_stats.rename(columns={'combined_score': 'Sentiment Score Statistics'}, inplace=True)
