@@ -1,5 +1,5 @@
 # Final Project
-Using a version of the VADER package specialized in finance lexicon and using data from a financial news website, we assigned sentiment scores to stock tickers on a daily, weekly and monhtly horizon.    
+Using a version of the VADER package specialized in financial lexicon and using data from a financial news website, we assigned sentiment scores to stock tickers on a daily, weekly and monhtly horizon.    
   
 We present those results using streamlit and its interactive interface and provide the user with wordclouds, trend analysis and similar visualizations based on the chosen stock ticker and date range.
 
