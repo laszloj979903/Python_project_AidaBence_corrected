@@ -4,7 +4,7 @@ Using a version of the VADER package specialized in financial lexicon and using 
 We present those results using streamlit and its interactive interface and provide the user with wordclouds, trend analysis and similar visualizations based on the chosen stock ticker and date range.
 
 ## How to use
-This script uses the vader_lexicon resource from NLTK for sentiment analysis that is downloaded automatically. If it fails to download or you get an error showing 'Resource vader_lexicon not found.' you need to ensure to download the resource and have it in the folder where you run the script from, e.g., '/Users/xy.../nltk_data'. To download run the following command in your Python environment: 
+This script uses the 'vader_lexicon' resource from NLTK for sentiment analysis that is downloaded automatically. If it fails to download or you get an error showing 'Resource vader_lexicon not found.' you need to ensure to download the resource and have it in the folder where you run the script from, e.g., '/Users/xy.../nltk_data'. To download run the following command in your Python environment: 
 ```import nltk```
 ```nltk.download('vader_lexicon') ```
 
