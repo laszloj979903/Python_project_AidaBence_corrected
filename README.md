@@ -7,6 +7,7 @@ We present those results using streamlit and its interactive interface and provi
 This script uses the vader_lexicon resource from NLTK for sentiment analysis that is downloaded automatically. If it fails to download or you get an error showing 'Resource vader_lexicon not found.' you need to ensure to download the resource and have it in the folder where you run the script from, e.g., '/Users/xy.../nltk_data'. To download run the following command in your Python environment: 
 ```import nltk```
 ```nltk.download('vader_lexicon') ```
+
 After completing the above steps: running ```streamlit run streamlit_stock_analysis.py ``` should trigger the Streamlit and allow the user to choose prefered asset and time range.  
 Sentiment scores (floats ranging from -1 to 1) are assigned to the assets based on a combination of news articles' titles and descriptions.
 The code also offers a deeper dive into the negative sentiments by giving a tabular view and filtering for data with poor sentiment scores (below 0) and fetching more context, as well as generating a new wordcloud with only the bad news.
