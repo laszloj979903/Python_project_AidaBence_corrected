@@ -4,7 +4,10 @@ Using a version of the VADER package specialized in financial lexicon and using 
 We present those results using streamlit and its interactive interface and provide the user with wordclouds, trend analysis and similar visualizations based on the chosen stock ticker and date range.
 
 ## How to use
-Running ```streamlit run streamlit_stock_analysis.py ``` should trigger the Streamlit and allow the user to choose prefered asset and time range.  
+This script uses the vader_lexicon resource from NLTK for sentiment analysis. To ensure it works properly, you need to download the resource. Run the following command in your Python environment: 
+```import nltk```
+```nltk.download('vader_lexicon') ```
+After completing the above steps: running ```streamlit run streamlit_stock_analysis.py ``` should trigger the Streamlit and allow the user to choose prefered asset and time range.  
 Sentiment scores (floats ranging from -1 to 1) are assigned to the assets based on a combination of news articles' titles and descriptions.
 The code also offers a deeper dive into the negative sentiments by giving a tabular view and filtering for data with poor sentiment scores (below 0) and fetching more context, as well as generating a new wordcloud with only the bad news.
 
