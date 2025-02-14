@@ -3,9 +3,8 @@ nltk
 requests
 pandas
 datetime
-time
-random
 wordcloud
 matplotlib
 plotly
 finvader
+yfinance
