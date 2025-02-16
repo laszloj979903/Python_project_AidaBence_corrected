@@ -102,6 +102,9 @@ def sentiment_analysis(text):
     
 df['combined_text'] = df['title'] + " " + df['description'].fillna("")
 df['combined_score'] = df['combined_text'].apply(sentiment_analysis)
+
+#Adding line to ensure all values are numeric
+df['combined_score'] = pd.to_numeric(df['combined_score'], errors='coerce')
     
 #%%Aggregate the sentiment analysis data based on date
 df['published_utc'] = pd.to_datetime(df['published_utc'])
@@ -180,7 +183,7 @@ if not df.empty and 'combined_score' in df.columns:
     fig = px.scatter(df, x='published_utc', y='combined_score', title=f"Sentiment Scores for {date_choice}",
                      labels={'combined_score': 'Sentiment Score', 'published_utc': 'Date'},
                      color_discrete_sequence=[chart_color])
-
+    
     best_articles = df.nlargest(5, 'combined_score') #we did 5 best and worst articles
     worst_articles = df.nsmallest(5, 'combined_score')
 
@@ -221,6 +224,7 @@ st.pyplot(fig)
 
 #%%Sliced
 if not df.empty and 'combined_score' in df.columns:
+    
     best_articles = df.nlargest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
     worst_articles = df.nsmallest(5, 'combined_score')[["title", "description", "combined_score", "published_utc"]]
 
